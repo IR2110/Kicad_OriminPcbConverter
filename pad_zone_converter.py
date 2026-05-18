@@ -7,7 +7,7 @@ import os
 # CONSTANTS DEFINITION (Like C #define)
 # ==========================================
 PLUGIN_NAME = "Orimin PCB Converter"
-PLUGIN_DESC = "Orimin PCBで取り込める形式にするために、スルーホールのランド統一とベタGNDの疑似ベタ（配線）化を行います。by入山"
+PLUGIN_DESC = "Orimin PCBで取り込める形式にするために、スルーホールのランド統一とベタGNDの疑似ベタ（配線）化を行います。"
 
 # Default Parameters
 DEFAULT_NET_NAME = "GND"
@@ -234,6 +234,7 @@ def convert_zones(board, target_net_name, track_width_iu, dlg):
                 layer = zone.GetLayer()
 
             net_code = zone.GetNetCode()
+            layer_name = board.GetLayerName(layer)
 
             if hasattr(zone, 'GetFilledPolysList'):
                 try: polys = zone.GetFilledPolysList(layer)
@@ -242,10 +243,16 @@ def convert_zones(board, target_net_name, track_width_iu, dlg):
                 polys = zone.GetFilledPolygons()
 
             if polys.OutlineCount() == 0:
-                dlg.log(f"-> Zone (Layer: {layer}) は塗りつぶされていないためスキップします。")
+                dlg.log(f"-> Zone (Layer: {layer_name}) は塗りつぶされていないためスキップします。")
                 continue
 
-            dlg.log(f"-> Zone (Layer: {layer}) を処理中...")
+            dlg.log(f"-> Zone (Layer: {layer_name}) を処理中...")
+
+            # --- グループの作成 ---
+            new_group = pcbnew.PCB_GROUP(board)
+            new_group.SetName(f"Pseudo-Zone_{target_net_name}_{layer_name}")
+            board.Add(new_group)
+
             bbox = polys.BBox()
             y_min, y_max = bbox.GetY(), bbox.GetBottom()
             edges = []
@@ -265,6 +272,7 @@ def convert_zones(board, target_net_name, track_width_iu, dlg):
                         track.SetStart(p1); track.SetEnd(p2); track.SetWidth(track_width_iu)
                         track.SetLayer(layer); track.SetNetCode(net_code)
                         board.Add(track)
+                        new_group.AddItem(track) # グループに追加
 
             # スキャンラインによる内側塗りつぶし
             y_current = y_min + track_width_iu / 2
@@ -276,13 +284,14 @@ def convert_zones(board, target_net_name, track_width_iu, dlg):
                     track.SetEnd(pcbnew.VECTOR2I(int(xs[k+1]), int(y_current)))
                     track.SetWidth(track_width_iu); track.SetLayer(layer); track.SetNetCode(net_code)
                     board.Add(track)
+                    new_group.AddItem(track) # グループに追加
                 y_current += y_step_iu
 
             zones_to_remove.append(zone)
 
     for zone in zones_to_remove:
         board.Remove(zone)
-    dlg.log(f"-> 合計 {len(zones_to_remove)} 個のZoneを変換・削除しました。")
+    dlg.log(f"-> 合計 {len(zones_to_remove)} 個のZoneを変換・削除し、グループ化しました。")
 
 # ==========================================
 # PLUGIN REGISTRATION
