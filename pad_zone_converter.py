@@ -289,7 +289,7 @@ def convert_zones(board, target_net_name, track_width_iu, dlg):
 
     for zone in zones_to_remove:
         board.Remove(zone)
-    dlg.log(f"-> 合計 {len(zones_to_remove)} 個のZoneを変換・削除し、グループ化しました。")
+    dlg.log(f"-> 合計 {len(zones_to_remove)} 個のZoneを変換しました。")
 
 # ==========================================
 # PLUGIN REGISTRATION
