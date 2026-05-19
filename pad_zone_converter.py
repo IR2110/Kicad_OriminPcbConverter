@@ -285,7 +285,7 @@ def convert_zones(board, target_net_name, track_width_iu, dlg):
                     new_group.AddItem(track) # グループに追加
                 y_current += y_step_iu
 
-            zones_to_remove.append(zone)
+            # zones_to_remove.append(zone)
 
     for zone in zones_to_remove:
         board.Remove(zone)
