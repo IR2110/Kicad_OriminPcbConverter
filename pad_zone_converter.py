@@ -62,7 +62,7 @@ class ConverterDialog(wx.Dialog):
 
         # ベタ変換 CheckBox
         self.cb_zone_convert = wx.CheckBox(self.panel, label=LABEL_ZONE_CONVERT)
-        self.cb_zone_convert.SetValue(False)
+        self.cb_zone_convert.SetValue(True)
         sbs.Add(self.cb_zone_convert, flag=wx.ALL, border=UI_BORDER_SIZE)
 
         # ベタ変換 詳細設定 (Grid)
