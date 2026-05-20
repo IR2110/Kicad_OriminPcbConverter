@@ -187,6 +187,7 @@ def unify_pads(board, dlg):
                 stats[shape_params] = stats.get(shape_params, 0) + 1
 
     changed_count = 0
+    forced_count = 0
     for fp in footprints:
         for pad in fp.Pads():
             if pad.GetShape() not in target_shapes:
@@ -199,7 +200,19 @@ def unify_pads(board, dlg):
                     pad.SetShape(new_shape)
                     pad.SetSize(pcbnew.VECTOR2I(sz_x, sz_y))
                     changed_count += 1
+                else:
+                    # フットプリント内に円形/長円形がない場合、強制的に円形に変換
+                    size = pad.GetSize()
+                    pad.SetShape(SHAPE_CIRCLE)
+                    pad.SetSize(size)
+                    forced_count += 1
+                    lib_name = fp.GetFPID().GetLibNickname()
+                    net_name = pad.GetNetname() if hasattr(pad, "GetNetname") else ""
+                    dlg.log(f"Warning: ライブラリ '{lib_name}' / ネット '{net_name}' のパッドには参照できる円形/長円形ランドがありません。強制的に円形に変換しました。")
+
     dlg.log(f"-> {changed_count} 個の四角形ランドを円形/長円形に変換しました。")
+    if forced_count > 0:
+        dlg.log(f"-> Warning: {forced_count} 個のランドを強制的に円形に変換しました。")
 
 def get_intersections(edges, Y):
     xs = []
